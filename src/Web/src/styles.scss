@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Dark mode (default) ── */
+:root {
+  --bg:          #000000;
+  --bg-2:        #0a0a0a;
+  --bg-3:        #111111;
+  --bg-4:        #161616;
+  --bg-hover:    rgba(255,255,255,0.04);
+  --border:      rgba(255,255,255,0.08);
+  --border-md:   rgba(255,255,255,0.12);
+  --border-hl:   rgba(255,255,255,0.18);
+  --text:        #ededed;
+  --text-2:      #a1a1a1;
+  --text-3:      #666666;
+  --text-4:      #444444;
+  --accent:      #6366f1;
+  --accent-dim:  rgba(99,102,241,0.15);
+  --accent-glow: rgba(99,102,241,0.3);
+  --green:       #3ecf8e;
+  --green-dim:   rgba(62,207,142,0.12);
+  --amber:       #f59e0b;
+  --amber-dim:   rgba(245,158,11,0.12);
+  --red:         #f87171;
+  --red-dim:     rgba(248,113,113,0.12);
+  --shadow:      0 0 0 1px rgba(255,255,255,0.05), 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-sm:   0 0 0 1px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.3);
+  --radius:      8px;
+  --radius-lg:   12px;
+  --font:        'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+/* ── Light mode (off-white) ── */
+body.light {
+  --bg:          #f6f6f4;
+  --bg-2:        #f0efec;
+  --bg-3:        #ffffff;
+  --bg-4:        #ebebeb;
+  --bg-hover:    rgba(0,0,0,0.04);
+  --border:      rgba(0,0,0,0.14);
+  --border-md:   rgba(0,0,0,0.20);
+  --border-hl:   rgba(0,0,0,0.30);
+  --text:        #111111;
+  --text-2:      #4b4b4b;
+  --text-3:      #888888;
+  --text-4:      #b0b0b0;
+  --accent:      #5254cc;
+  --accent-dim:  rgba(82,84,204,0.09);
+  --accent-glow: rgba(82,84,204,0.2);
+  --green:       #16a34a;
+  --green-dim:   rgba(22,163,74,0.1);
+  --amber:       #b45309;
+  --amber-dim:   rgba(180,83,9,0.1);
+  --red:         #dc2626;
+  --red-dim:     rgba(220,38,38,0.09);
+  --shadow:      0 0 0 1px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-sm:   0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { opacity: 0.8; }
+button { font-family: var(--font); cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 3px; }
+
+/* ── CDK drag ── */
+.cdk-drag-preview {
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  opacity: 0.92;
+}
+.cdk-drag-placeholder {
+  opacity: 0;
+  border: 1px dashed var(--border-md);
+  border-radius: var(--radius);
+  background: var(--accent-dim);
+  height: 68px;
+}
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0,0,0.2,1);
+}
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0,0,0.2,1);
+}
+
+/* ── Shared btn classes used across components ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, color 150ms;
+  font-family: var(--font);
+  white-space: nowrap;
+  border: none;
+}
+.btn-ghost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.btn-ghost:hover { background: var(--bg-hover); border-color: var(--border-md); color: var(--text); }
+
+.btn-solid {
+  background: var(--text);
+  border: 1px solid var(--border-hl);
+  color: var(--bg);
+  font-weight: 600;
+}
+.btn-solid:hover:not(:disabled) { opacity: 0.88; }
+
+.btn-accent {
+  background: var(--accent-dim);
+  border: 1px solid rgba(99,102,241,0.3);
+  color: #a5b4fc;
+}
+.btn-accent:hover { background: rgba(99,102,241,0.22); }
+
+body.light .btn-solid { background: #111; color: #fff; border-color: rgba(0,0,0,0.2); }
+body.light .btn-solid:hover:not(:disabled) { background: #333; opacity: 1; }
+body.light .btn-accent { color: var(--accent); }

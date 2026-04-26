@@ -1,0 +1,36 @@
+syntax = "proto3";
+package pulsecrm.scoring.v1;
+option csharp_namespace = "PulseCRM.Shared.Proto.Scoring";
+import "google/protobuf/timestamp.proto";
+
+service ScoringService {
+  rpc GetScore (GetScoreRequest) returns (ScoreResponse);
+  rpc GetScoresBatch (BatchScoreRequest) returns (BatchScoreResponse);
+  rpc RecalculateScore (RecalculateRequest) returns (ScoreResponse);
+}
+
+message GetScoreRequest {
+  string tenant_id = 1;
+  string deal_id = 2;
+}
+
+message BatchScoreRequest {
+  string tenant_id = 1;
+  repeated string deal_ids = 2;
+}
+
+message RecalculateRequest {
+  string tenant_id = 1;
+  string deal_id = 2;
+}
+
+message ScoreResponse {
+  string deal_id = 1;
+  int32 score = 2;
+  map<string, double> factors = 3;
+  google.protobuf.Timestamp calculated_at = 4;
+}
+
+message BatchScoreResponse {
+  repeated ScoreResponse scores = 1;
+}

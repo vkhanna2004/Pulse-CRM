@@ -1,0 +1,301 @@
+networks:
+  pulsecrm-net:
+    driver: bridge
+
+services:
+
+  # ── Databases ──────────────────────────────────────────────────────────────
+
+  postgres-deals:
+    image: postgres:16-alpine
+    env_file: [.env]
+    environment:
+      POSTGRES_DB: deals_db
+      POSTGRES_USER: ${POSTGRES_USER:-pulsecrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-deals-data:/var/lib/postgresql/data
+    networks: [pulsecrm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsecrm} -d deals_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres-scoring:
+    image: postgres:16-alpine
+    env_file: [.env]
+    environment:
+      POSTGRES_DB: scoring_db
+      POSTGRES_USER: ${POSTGRES_USER:-pulsecrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-scoring-data:/var/lib/postgresql/data
+    networks: [pulsecrm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsecrm} -d scoring_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres-notifications:
+    image: postgres:16-alpine
+    env_file: [.env]
+    environment:
+      POSTGRES_DB: notifications_db
+      POSTGRES_USER: ${POSTGRES_USER:-pulsecrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-notifications-data:/var/lib/postgresql/data
+    networks: [pulsecrm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsecrm} -d notifications_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres-summarization:
+    image: postgres:16-alpine
+    env_file: [.env]
+    environment:
+      POSTGRES_DB: summarization_db
+      POSTGRES_USER: ${POSTGRES_USER:-pulsecrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-summarization-data:/var/lib/postgresql/data
+    networks: [pulsecrm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsecrm} -d summarization_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Cache ──────────────────────────────────────────────────────────────────
+
+  redis:
+    image: redis:7-alpine
+    env_file: [.env]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # ── Message Broker ─────────────────────────────────────────────────────────
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    env_file: [.env]
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+  # ── Identity ───────────────────────────────────────────────────────────────
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    env_file: [.env]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    networks: [pulsecrm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── Logging ────────────────────────────────────────────────────────────────
+
+  seq:
+    image: datalust/seq:latest
+    env_file: [.env]
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "5341:5341"
+      - "5340:80"
+    volumes:
+      - seq-data:/data
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+  # ── Application Services ───────────────────────────────────────────────────
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile.Gateway
+    env_file: [.env]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Redis: ${REDIS_CONNECTION}
+      Jwt__Authority: http://keycloak:8080/realms/pulsecrm
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:5341
+    ports:
+      - "5000:80"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+  deals:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile.Deals
+    env_file: [.env]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_Kestrel__EndpointDefaults__Protocols: Http1AndHttp2
+      ConnectionStrings__DealsDb: Host=postgres-deals;Port=5432;Database=deals_db;Username=${POSTGRES_USER:-pulsecrm};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: ${REDIS_CONNECTION}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS}
+      Services__ScoringGrpcUrl: http://scoring:8080
+      Jwt__Authority: http://keycloak:8080/realms/pulsecrm
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:5341
+    ports:
+      - "5001:80"
+    depends_on:
+      postgres-deals:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+  scoring:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile.Scoring
+    env_file: [.env]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_Kestrel__EndpointDefaults__Protocols: Http1AndHttp2
+      ConnectionStrings__ScoringDb: Host=postgres-scoring;Port=5432;Database=scoring_db;Username=${POSTGRES_USER:-pulsecrm};Password=${POSTGRES_PASSWORD}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS}
+      Services__DealsGrpcUrl: http://deals:8080
+      Jwt__Authority: http://keycloak:8080/realms/pulsecrm
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:5341
+    ports:
+      - "5002:80"
+    depends_on:
+      postgres-scoring:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      deals:
+        condition: service_started
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+  notifications:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile.Notifications
+    env_file: [.env]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__NotificationsDb: Host=postgres-notifications;Port=5432;Database=notifications_db;Username=${POSTGRES_USER:-pulsecrm};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: ${REDIS_CONNECTION}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS}
+      Services__DealsGrpcUrl: http://deals:8080
+      Jwt__Authority: http://keycloak:8080/realms/pulsecrm
+      Serilog__WriteTo__1__Name: Seq
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:5341
+    ports:
+      - "5003:80"
+    depends_on:
+      postgres-notifications:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      deals:
+        condition: service_started
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+  summarization:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile.Summarization
+    env_file: [.env]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__SummarizationDb: Host=postgres-summarization;Port=5432;Database=summarization_db;Username=${POSTGRES_USER:-pulsecrm};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: ${REDIS_CONNECTION}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS}
+      Services__DealsGrpcUrl: http://deals:8080
+      Google__ApiKey: ${GOOGLE_API_KEY}
+      Jwt__Authority: http://keycloak:8080/realms/pulsecrm
+      Serilog__WriteTo__1__Name: Seq
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:5341
+    ports:
+      - "5004:80"
+    depends_on:
+      postgres-summarization:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      deals:
+        condition: service_started
+    networks: [pulsecrm-net]
+    restart: unless-stopped
+
+# ── Named Volumes ──────────────────────────────────────────────────────────────
+
+volumes:
+  postgres-deals-data:
+  postgres-scoring-data:
+  postgres-notifications-data:
+  postgres-summarization-data:
+  redis-data:
+  rabbitmq-data:
+  seq-data:

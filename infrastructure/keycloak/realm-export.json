@@ -1,0 +1,131 @@
+{
+  "realm": "pulsecrm",
+  "enabled": true,
+  "sslRequired": "none",
+  "displayName": "PulseCRM",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "clients": [
+    {
+      "clientId": "pulsecrm-spa",
+      "name": "PulseCRM SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:4201/*",
+        "http://localhost:4202/*",
+        "http://localhost:4203/*",
+        "http://localhost:4204/*",
+        "http://localhost:4205/*",
+        "http://localhost:5000/*",
+        "http://localhost:42167/*",
+        "http://localhost/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:4201",
+        "http://localhost:4202",
+        "http://localhost:4203",
+        "http://localhost:4204",
+        "http://localhost:4205",
+        "http://localhost:5000",
+        "http://localhost:42167",
+        "+"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "tenant_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [],
+    "client": {
+      "pulsecrm-spa": [
+        {
+          "name": "sales",
+          "description": "Sales representative role"
+        },
+        {
+          "name": "manager",
+          "description": "Sales manager role"
+        },
+        {
+          "name": "admin",
+          "description": "Administrator role"
+        }
+      ]
+    }
+  },
+  "users": [
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000001",
+      "username": "alice@pulsecrm.dev",
+      "email": "alice@pulsecrm.dev",
+      "firstName": "Alice",
+      "lastName": "Demo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "tenant_id": ["00000000-0000-0000-0000-000000000001"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo123",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "pulsecrm-spa": ["sales"]
+      }
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000002",
+      "username": "bob@pulsecrm.dev",
+      "email": "bob@pulsecrm.dev",
+      "firstName": "Bob",
+      "lastName": "Demo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "tenant_id": ["00000000-0000-0000-0000-000000000001"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo123",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "pulsecrm-spa": ["manager"]
+      }
+    }
+  ]
+}

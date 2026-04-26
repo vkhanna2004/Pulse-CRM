@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy project files first for layer-cached restore
+COPY ["src/Services/Scoring/PulseCRM.Scoring.csproj", "src/Services/Scoring/"]
+COPY ["src/Shared/Contracts/PulseCRM.Shared.Contracts.csproj", "src/Shared/Contracts/"]
+COPY ["src/Shared/Proto/PulseCRM.Shared.Proto.csproj", "src/Shared/Proto/"]
+
+RUN dotnet restore "src/Services/Scoring/PulseCRM.Scoring.csproj"
+
+# Copy the rest of the source
+COPY . .
+
+RUN dotnet publish "src/Services/Scoring/PulseCRM.Scoring.csproj" \
+    -c Release \
+    -o /app/publish
+
+# ── Runtime image ─────────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+
+EXPOSE 80 8080 8080 8080
+
+ENTRYPOINT ["dotnet", "PulseCRM.Scoring.dll"]

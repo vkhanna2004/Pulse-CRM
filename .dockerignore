@@ -1,0 +1,20 @@
+.git
+.vscode
+.idea
+
+# Frontend local artifacts
+src/Web/node_modules
+src/Web/.angular
+src/Web/dist
+tests/E2E/node_modules
+
+# .NET build artifacts
+**/bin
+**/obj
+**/TestResults
+
+# OS/editor temp files
+*.swp
+*.tmp
+*.user
+*.suo

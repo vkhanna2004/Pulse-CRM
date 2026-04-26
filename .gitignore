@@ -1,0 +1,59 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+_ReSharper*/
+*.ncrunch*
+*.DotSettings.user
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+publish/
+*.nupkg
+*.snupkg
+
+# ASP.NET
+wwwroot/dist/
+wwwroot/lib/
+
+# Node / Angular / frontend
+node_modules/
+dist/
+.angular/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+secrets.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# Coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+*.swp
+*.swo
+.vscode/settings.json
+!.vscode/extensions.json
+
+# Docker
+docker-compose.override.yml

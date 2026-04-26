@@ -1,0 +1,5 @@
+{
+  "/api": { "target": "http://localhost:5000", "secure": false, "changeOrigin": true },
+  "/hubs": { "target": "http://localhost:5000", "secure": false, "changeOrigin": true, "ws": true },
+  "/auth": { "target": "http://localhost:8080", "secure": false, "changeOrigin": true, "pathRewrite": { "^/auth": "" } }
+}
