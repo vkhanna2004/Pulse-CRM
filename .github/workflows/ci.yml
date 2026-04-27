@@ -27,6 +27,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - run: dotnet restore PulseCRM.sln
       - run: dotnet test tests/Scoring.IntegrationTests --no-build --filter "Category!=Integration" -c Release --logger "github"
 
   integration-tests:
@@ -57,6 +58,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - run: dotnet restore PulseCRM.sln
       - run: dotnet test tests/Scoring.IntegrationTests -c Release --logger "github"
       - run: dotnet test tests/Notifications.IntegrationTests -c Release --logger "github"
       - run: dotnet test tests/Summarization.IntegrationTests -c Release --logger "github"
