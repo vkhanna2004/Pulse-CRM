@@ -59,6 +59,7 @@ jobs:
           dotnet-version: '8.0.x'
       - run: dotnet test tests/Scoring.IntegrationTests -c Release --logger "github"
       - run: dotnet test tests/Notifications.IntegrationTests -c Release --logger "github"
+      - run: dotnet test tests/Summarization.IntegrationTests -c Release --logger "github"
 
   angular-build:
     name: Angular Build

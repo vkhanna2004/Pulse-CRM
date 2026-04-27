@@ -2,7 +2,7 @@ using PulseCRM.Summarization.Services;
 using Xunit;
 using FluentAssertions;
 
-namespace PulseCRM.Notifications.IntegrationTests;
+namespace PulseCRM.Summarization.IntegrationTests;
 
 public class PiiRedactionTests
 {

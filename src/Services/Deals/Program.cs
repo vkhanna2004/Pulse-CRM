@@ -161,3 +161,5 @@ app.MapHealthChecks("/readyz");
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
+public partial class Program { }
