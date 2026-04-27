@@ -43,12 +43,12 @@ public class ScoringAlgorithmTests
 
     [Theory]
     [InlineData(0, 100)]
-    [InlineData(10, 60)]
+    [InlineData(10, 30)]
     [InlineData(60, 5)]
     public void Calculate_RecencyDecaysWithTime(int daysInStage, int expectedMinScore)
     {
         var input = new ScoringInput(100_000, 3, 4, daysInStage, 5, 500_000);
         var result = LeadScoringAlgorithm.Calculate(input);
-        result.Score.Should().BeGreaterThanOrEqualTo(0);
+        result.Score.Should().BeGreaterThanOrEqualTo(expectedMinScore);
     }
 }
